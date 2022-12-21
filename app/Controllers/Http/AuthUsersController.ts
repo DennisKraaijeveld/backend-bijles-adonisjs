@@ -96,4 +96,32 @@ export default class AuthUsersController {
 
     return response.ok({ message: 'User logged out successfully', revoked: true })
   }
+
+  public async getProfile({ auth, response }: HttpContextContract) {
+    try {
+      const user = await auth.use('user').authenticate()
+
+      const data = await User.query()
+        .preload(Number(user.userTypeId) === UserRoles.TUTOR ? 'tutorUser' : 'studentUser')
+        .where('id', user.id)
+        .first()
+
+      // Check if user has active account
+      if (
+        data?.accountStatus === AccountStatus.INACTIVE ||
+        data?.accountStatus === AccountStatus.PENDING
+      ) {
+        await auth.use('user').revoke()
+        return response.unauthorized({
+          message: {
+            error: 'Account is not verified',
+          },
+        })
+      }
+
+      return response.ok({ message: 'User profile', data })
+    } catch (error) {
+      return response.unauthorized({ message: { error: 'Invalid credentials' } })
+    }
+  }
 }

@@ -24,6 +24,7 @@ import HealthCheck from '@ioc:Adonis/Core/HealthCheck'
 // Users Routes
 
 Route.group(() => {
+  Route.get('/profile', 'AuthUsersController.getProfile').as('profile')
   Route.post('register', 'AuthUsersController.register').as('register')
   Route.post('login', 'AuthUsersController.login').as('login')
   Route.post('logout', 'AuthUsersController.logout').as('logout')

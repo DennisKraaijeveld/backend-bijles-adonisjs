@@ -3,6 +3,7 @@ import Hash from '@ioc:Adonis/Core/Hash'
 import EmailVerificationToken from 'App/Models/EmailVerificationToken'
 import User from 'App/Models/User'
 import { AccountStatus } from 'Contracts/enums'
+import { DateTime } from 'luxon'
 
 export default class VerifyEmailsController {
   public async verifyEmail({ request, response }: HttpContextContract) {
@@ -22,6 +23,7 @@ export default class VerifyEmailsController {
 
     // Update user account status
     user.accountStatus = AccountStatus.ACTIVE
+    user.emailVerifiedAt = DateTime.local()
     await user.save()
 
     // Delete the token

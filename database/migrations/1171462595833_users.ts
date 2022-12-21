@@ -24,6 +24,7 @@ export default class Users extends BaseSchema {
         .enum('account_status', Object.values(AccountStatus))
         .notNullable()
         .defaultTo(AccountStatus.PENDING)
+      table.boolean('onboarding_completed').notNullable().defaultTo(false)
       table.boolean('active_subscription').notNullable().defaultTo(false)
       table.boolean('email_notification_active').notNullable().defaultTo(true)
       table.date('registration_date').notNullable()
