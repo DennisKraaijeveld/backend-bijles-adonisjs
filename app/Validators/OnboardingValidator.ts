@@ -1,8 +1,7 @@
 import { schema, CustomMessages, rules } from '@ioc:Adonis/Core/Validator'
-import { UserGender } from 'Contracts/enums'
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
-export default class AuthValidator {
+export default class OnboardingValidator {
   constructor(protected ctx: HttpContextContract) {}
 
   /*
@@ -25,14 +24,17 @@ export default class AuthValidator {
    *    ```
    */
   public schema = schema.create({
-    email: schema.string({}, [rules.email(), rules.unique({ table: 'users', column: 'email' })]),
-    password: schema.string({}, [rules.confirmed()]),
-    user_type_id: schema.number(),
-    postal_code: schema.string(),
-    house_number: schema.string(),
-    gender: schema.enum(Object.values(UserGender)),
-    first_name: schema.string(),
-    last_name: schema.string(),
+    user_image: schema.file({
+      size: '2mb',
+      extnames: ['jpg', 'png', 'jpeg'],
+    }),
+    date_of_birth: schema.date({
+      format: 'dd-mm-yyyy',
+    }),
+    biography: schema.string({}, [rules.maxLength(500), rules.minLength(10)]),
+    contact_number: schema.string({}, [rules.maxLength(15), rules.minLength(10)]),
+    subjects: schema.array().members(schema.number()),
+    hourly_rate: schema.number(),
   })
 
   /**

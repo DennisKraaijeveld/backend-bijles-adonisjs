@@ -1,13 +1,22 @@
-import { BaseModel, BelongsTo, belongsTo, column } from '@ioc:Adonis/Lucid/Orm'
+import {
+  BaseModel,
+  BelongsTo,
+  ManyToMany,
+  belongsTo,
+  column,
+  manyToMany,
+} from '@ioc:Adonis/Lucid/Orm'
 import User from './User'
 import { DateTime } from 'luxon'
+import Subject from './Subject'
+import { RawBuilderContract } from '@ioc:Adonis/Lucid/Database'
 
 export default class Student extends BaseModel {
   @column({ isPrimary: true })
   public id: number
 
   @column()
-  public subjectId: number
+  public userId: number
 
   @column()
   public totalReviews: number
@@ -16,7 +25,7 @@ export default class Student extends BaseModel {
   public averageRating: number
 
   @column()
-  public userId: number
+  public location: string | RawBuilderContract
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime
@@ -26,4 +35,9 @@ export default class Student extends BaseModel {
 
   @belongsTo(() => User)
   public user: BelongsTo<typeof User>
+
+  @manyToMany(() => Subject, {
+    pivotTable: 'student_subjects',
+  })
+  public subjects: ManyToMany<typeof Subject>
 }

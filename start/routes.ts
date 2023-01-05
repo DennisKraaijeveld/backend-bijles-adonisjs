@@ -23,17 +23,30 @@ import HealthCheck from '@ioc:Adonis/Core/HealthCheck'
 
 // Users Routes
 
+// Routes which should be accessible without onboarding middleware
 Route.group(() => {
-  Route.get('/profile', 'AuthUsersController.getProfile').as('profile')
+  Route.get('/profile', 'UsersController.getProfile').as('profile')
+
   Route.post('register', 'AuthUsersController.register').as('register')
   Route.post('login', 'AuthUsersController.login').as('login')
   Route.post('logout', 'AuthUsersController.logout').as('logout')
 
   Route.post('/verify-email', 'VerifyEmailsController.verifyEmail').as('verify.email')
+
+  Route.post('/onboarding/update-profile', 'OnboardingController.updateProfile').as(
+    'onboarding_completed'
+  )
 }).prefix('api/v1/users/')
 
-// Admins Routes
+// Routes which should be accessible only after onboarding middleware
+Route.group(() => {
+  Route.get('/search-tutors', 'TutorSearchController.nearbyTutors').as('search.tutors')
+})
+  .prefix('api/v1/users/')
+  .middleware('auth')
+  .middleware('onboarding')
 
+// Admins Routes
 Route.group(() => {
   Route.post('register', 'AuthAdminsController.register').as('register.admin')
   Route.post('login', 'AuthAdminsController.login').as('login.admin')

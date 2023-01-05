@@ -14,7 +14,7 @@ export default class Users extends BaseSchema {
       table.enum('user_type_id', Object.values(UserRoles)).notNullable()
       table.string('first_name').notNullable()
       table.string('last_name').notNullable()
-      table.string('user_image').nullable()
+      table.json('user_image').nullable().defaultTo(null)
       table.date('date_of_birth').nullable()
       table.string('biography').nullable()
       table.enu('gender', Object.values(UserGender)).notNullable()

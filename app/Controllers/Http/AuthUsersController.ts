@@ -5,11 +5,15 @@ import User from 'App/Models/User'
 import Tutor from 'App/Models/Tutor'
 import Student from 'App/Models/Student'
 import { AccountStatus, UserRoles } from 'Contracts/enums'
+import GeoLocation from 'App/Helpers/GeoLocation'
+import Database from '@ioc:Adonis/Lucid/Database'
 
 export default class AuthUsersController {
   // Register function
-  public async register({ request, response }: HttpContextContract) {
+  public async register(ctx: HttpContextContract) {
+    const { request, response } = ctx
     // Check for the type of user
+
     const role = request.only(['user_type_id'])
 
     const roleNumber = Number(role.user_type_id)
@@ -31,9 +35,24 @@ export default class AuthUsersController {
       user.lastName = validated.last_name
       user.postalCode = validated.postal_code
 
-      const tutor = new Tutor()
+      user.save()
 
-      await user.related('tutorUser').save(tutor)
+      // We will use an API to get the coordinates from the postal code.
+      // This is an API for Dutch Postal Codes and will first verify if the postal code is valid.
+      // @TODO: Return correct error message if postal code is invalid from the helper function.
+
+      const geoData = await GeoLocation.getCords(ctx)
+
+      if (geoData) {
+        // Create a Point object from the longitude and latitude coordinates
+        const location = Database.raw(`ST_MakePoint(?, ?)`, [geoData.longitude, geoData.latitude])
+
+        const tutor = await Tutor.create({ userId: user.id, location })
+
+        await user.related('tutorUser').save(tutor)
+      } else {
+        return response.unauthorized({ message: { error: 'PostalCode not found' } })
+      }
 
       user.createEmailVerificationToken(user)
 
@@ -53,9 +72,24 @@ export default class AuthUsersController {
       user.lastName = validated.last_name
       user.postalCode = validated.postal_code
 
-      const student = new Student()
+      user.save()
 
-      await user.related('studentUser').save(student)
+      // We will use an API to get the coordinates from the postal code.
+      // This is an API for Dutch Postal Codes and will first verify if the postal code is valid.
+      // @TODO: Return correct error message if postal code is invalid from the helper function.
+
+      const geoData = await GeoLocation.getCords(ctx)
+
+      if (geoData) {
+        // Create a Point object from the longitude and latitude coordinates
+        const location = Database.raw(`ST_MakePoint(?, ?)`, [geoData.longitude, geoData.latitude])
+
+        const student = await Student.create({ userId: user.id, location })
+
+        await user.related('studentUser').save(student)
+      } else {
+        return response.unauthorized({ message: { error: 'PostalCode not found' } })
+      }
 
       user.createEmailVerificationToken(user)
 
@@ -77,7 +111,7 @@ export default class AuthUsersController {
 
     try {
       const token = await auth.use('user').attempt(data.email, data.password)
-      console.log(token)
+
       return response.ok({ message: 'User logged in successfully', data: token })
     } catch (error) {
       return response.unauthorized({ message: { error: 'Invalid credentials' } })
@@ -97,29 +131,18 @@ export default class AuthUsersController {
     return response.ok({ message: 'User logged out successfully', revoked: true })
   }
 
-  public async getProfile({ auth, response }: HttpContextContract) {
+  public async onboardingStatus({ auth, response }: HttpContextContract) {
+    // Fetch the authenticated user
+
     try {
       const user = await auth.use('user').authenticate()
 
-      const data = await User.query()
-        .preload(Number(user.userTypeId) === UserRoles.TUTOR ? 'tutorUser' : 'studentUser')
-        .where('id', user.id)
-        .first()
+      // Check if the user has completed the onboarding process
 
-      // Check if user has active account
-      if (
-        data?.accountStatus === AccountStatus.INACTIVE ||
-        data?.accountStatus === AccountStatus.PENDING
-      ) {
-        await auth.use('user').revoke()
-        return response.unauthorized({
-          message: {
-            error: 'Account is not verified',
-          },
-        })
-      }
+      // Perform the onboarding process for the user
 
-      return response.ok({ message: 'User profile', data })
+      // Return a success response to the client
+      return response.status(200).send({ message: 'Onboarding completed successfully' })
     } catch (error) {
       return response.unauthorized({ message: { error: 'Invalid credentials' } })
     }

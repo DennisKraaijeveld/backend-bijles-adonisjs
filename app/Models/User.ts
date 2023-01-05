@@ -4,7 +4,9 @@ import { AccountStatus, UserGender, UserRoles } from 'Contracts/enums'
 import Hash from '@ioc:Adonis/Core/Hash'
 import Env from '@ioc:Adonis/Core/Env'
 import Mail from '@ioc:Adonis/Addons/Mail'
-// import { nanoid } from 'nanoid'
+import { v4 as uuidv4 } from 'uuid'
+import { attachment, AttachmentContract } from '@ioc:Adonis/Addons/AttachmentLite'
+import { MultipartFileContract } from '@ioc:Adonis/Core/BodyParser'
 
 import Tutor from './Tutor'
 import Student from './Student'
@@ -35,11 +37,14 @@ export default class User extends BaseModel {
   @column()
   public lastName: string
 
-  @column()
-  public userImage?: string
+  @attachment()
+  public userImage?: AttachmentContract | null
 
   @column.dateTime({ autoCreate: false })
   public dateOfBirth: DateTime
+
+  @column()
+  public biography?: string
 
   @column()
   public gender: UserGender
@@ -48,10 +53,13 @@ export default class User extends BaseModel {
   public postalCode: string
 
   @column()
+  public contactNumber?: string
+
+  @column()
   public accountStatus: AccountStatus
 
   @column()
-  public isAdmin: boolean
+  public onboardingCompleted: boolean
 
   @column()
   public activeSubscription: boolean
@@ -94,7 +102,7 @@ export default class User extends BaseModel {
   }
 
   public async createEmailVerificationToken(user: User) {
-    const token = '11'
+    const token = uuidv4()
 
     const data = {
       userId: user.id,

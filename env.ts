@@ -38,4 +38,6 @@ export default Env.rules({
   SMTP_PORT: Env.schema.number(),
   SMTP_USERNAME: Env.schema.string(),
   SMTP_PASSWORD: Env.schema.string(),
+
+  GEOCODING_API_KEY: Env.schema.string(),
 })
